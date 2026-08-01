@@ -41,6 +41,26 @@
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
+
+		/*
+		 * Bootloader continuous-splash framebuffer, kept alive across
+		 * arm-smmu (15000000.iommu) init. iommus = <&apps_smmu 0x800 0x2>
+		 * makes this fb device claim the display Stream ID so the QCOM
+		 * SMMU bypass SMR preserved in qcom_smmu_cfg_probe() is retained
+		 * (the stock iommu-addresses/RMR route is NOT honored by
+		 * arm-smmu-500). SID 0x800 mask 0x2 taken from the sm8750 mdss
+		 * node. 2400x1504, 32bpp a8r8g8b8, stride = 2400 * 4 = 9600.
+		 */
+		framebuffer0: framebuffer@fc800000 {
+			compatible = "simple-framebuffer";
+			reg = <0x0 0xfc800000 0x0 (9600 * 1504)>;
+			width = <2400>;
+			height = <1504>;
+			stride = <(2400 * 4)>;
+			format = "a8r8g8b8";
+			iommus = <&apps_smmu 0x800 0x2>;
+			memory-region = <&cont_splash_mem>;
+		};
 	};
 	
 	pmic-glink {
@@ -356,12 +376,13 @@
 	gpio-keys {
 		compatible = "gpio-keys";
 
-		pinctrl-0 = <&volume_down_n>;
+		pinctrl-0 = <&volume_up_n>;
 		pinctrl-names = "default";
 
-		key-volume-down {
-			label = "Volume Down";
-			linux,code = <KEY_VOLUMEDOWN>;
+		/* np05j: pm8550 gpio6 is VOLUME UP (downstream vol_up = KEY_VOLUMEUP) */
+		key-volume-up {
+			label = "Volume Up";
+			linux,code = <KEY_VOLUMEUP>;
 			gpios = <&pm8550_gpios 6 GPIO_ACTIVE_LOW>;
 			debounce-interval = <15>;
 			linux,can-disable;
@@ -936,7 +957,7 @@
 
 
 &pm8550_gpios {
-	volume_down_n: volume-down-n-state {
+	volume_up_n: volume-up-n-state {
 		pins = "gpio6";
 		function = "normal";
 		bias-pull-up;
@@ -950,7 +971,8 @@
 };
 
 &pon_resin {
-	linux,code = <KEY_VOLUMEUP>;
+	/* np05j: PON resin = KEY_VOLUMEDOWN (downstream) */
+	linux,code = <KEY_VOLUMEDOWN>;
 
 	status = "okay";
 };
