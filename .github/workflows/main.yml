@@ -48,3 +48,4 @@ jobs:
           out/arch/arm64/boot/Image
           out/arch/arm64/boot/Image.gz
           out/arch/arm64/boot/dts/qcom/sm8750-oneplus-dodge.dtb
+          out/arch/arm64/boot/dts/qcom/sm8750-nubia-np05j.dtb
